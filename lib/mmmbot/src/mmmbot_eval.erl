@@ -60,11 +60,14 @@ handle_event({Line="fun() ->" ++ _, _User}, State=#state{funs=Funs}) ->
 handle_event({Line, User}, State=#state{funs=Funs}) ->
     lists:foreach(fun(Form) ->
                           Bindings =  erl_eval:add_binding('User', User, 
-                                     erl_eval:add_binding('Msg', Line, erl_eval:new_bindings())),
+                                                           erl_eval:add_binding('Msg', Line, erl_eval:new_bindings())),
                           {value, Fun, _} = erl_eval:expr(Form, Bindings),   
                           Fun()
                   end, Funs),
+
     {ok, State}.
+
+
 
 %%--------------------------------------------------------------------
 %% @private

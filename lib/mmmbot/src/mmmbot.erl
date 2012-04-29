@@ -97,8 +97,8 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_cast({message, Msg}, State=#state{sock=Sock, channel=Channel, nickname=Nickname}) ->
-    irc_privmsg(Sock, Channel, Nickname ++ ": " ++ Msg),
+handle_cast({message, Msg}, State=#state{sock=Sock, channel=Channel}) ->
+    irc_privmsg(Sock, Channel, Msg),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
