@@ -64,8 +64,8 @@ init([]) ->
     {ok, Channel} = application:get_env(mmmbot, channel),
 
     {ok, Sock} = gen_tcp:connect(Host, Port, [{packet, line}]),
-    gen_tcp:send(Sock, "NICK " ++ Nickname ++ "\r\n"),
-    gen_tcp:send(Sock, "USER " ++ Nickname ++ " blah blah blah blah\r\n"),
+    gen_tcp:send(Sock, ["NICK ", Nickname, "\r\n"]),
+    gen_tcp:send(Sock, ["USER ", Nickname, " blah blah blah blah\r\n"]),
 
     {ok, #state{sock=Sock, channel=Channel, nickname=Nickname}}.
 
@@ -149,7 +149,7 @@ code_change(_OldVsn, State, _Extra) ->
 % Someone sent a message to us
 parse_line(Sock, [User, "PRIVMSG", Channel, Nickname | _], _Msg, #state{nickname=Nickname}) ->
     Nick = lists:nth(1, string:tokens(User, "!")),
-    irc_privmsg(Sock, Channel, Nick ++ ": " ++ random_string());
+    irc_privmsg(Sock, Channel, [Nick, ": ", random_string()]);
 
 % A message to the channel
 parse_line(_, [User, "PRIVMSG", _Channel | _], Msg, _State) ->
@@ -162,12 +162,12 @@ parse_line(_, [User, "PRIVMSG", _Channel | _], Msg, _State) ->
 
 % If the second token is "376", then join our channel.  376 indicates End of MOTD.
 parse_line(Sock, [_, "376" | _], _Msg, #state{channel=Channel}) ->
-    gen_tcp:send(Sock, "JOIN :" ++ Channel ++ "\r\n");
+    gen_tcp:send(Sock, ["JOIN :", Channel, "\r\n"]);
 
 % The server will periodically send PINGs and expect you to PONG back to make sure
 % you haven't lost the connection.
 parse_line(Sock, ["PING"|Rest], _Msg, _State) ->
-    gen_tcp:send(Sock, "PONG " ++ Rest ++ "\r\n");
+    gen_tcp:send(Sock, ["PONG ", Rest, "\r\n"]);
 
 % Catch all
 parse_line(_, _, _, _) ->
@@ -187,6 +187,6 @@ random_string() ->
 % This just helps us write a PRIVMSG back to a client without having to type
 % the newlines and :'s ourselves so much.  It'll be more useful later.
 irc_privmsg(Sock, To, Message) ->
-    gen_tcp:send(Sock, "PRIVMSG " ++ To ++ " :" ++ Message ++ "\r\n").
+    gen_tcp:send(Sock, ["PRIVMSG ", To, " :", Message, "\r\n"]).
 
 
