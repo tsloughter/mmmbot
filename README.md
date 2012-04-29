@@ -32,8 +32,8 @@ a # like [code]"#erlang"[code].
            {handlers, [
                         {lager_console_backend, info},
                         {lager_file_backend, [
-                        {"error.log", error, 10485760, "$D0", 5},
-                        {"console.log", info, 10485760, "$D0", 5}
+                          {"error.log", error, 10485760, "$D0", 5},
+                          {"console.log", info, 10485760, "$D0", 5}
                       ]}
           ]}
    ]}
