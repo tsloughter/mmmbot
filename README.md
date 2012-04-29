@@ -12,15 +12,20 @@ ibrowe      |            3.0.3
 
 ### Setup
 
-Create [code]./config/sys.config[code]
+Create [code]./config/sys.config[code]. The port should be an integer,
+usually 6667, the nickname can be anything and channel must start with
+a # like [code]"#erlang"[code].
 
 ```erlang
 [ 
-  {mmmbot, []},
+  {mmmbot, [{host, <IRC HOST>},
+            {port, <IRC PORT>},
+            {nickname, "mmmbot"},
+            {channel, <CHANNEL>}]},
 
   {mmmbot_images, [{access_key, <AWS KEY>},
                    {secret_key, <SECRET KEY>},
-                   {bucket, <S3 Bucket>}]}
+                   {bucket, <S3 BUCKET>}]}
 ].
 
 ```
