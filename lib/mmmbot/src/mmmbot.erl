@@ -177,7 +177,7 @@ random_string() ->
                   "STOP TALKIN' 'BOUT BLAH BLAH BLAH",
                   "FREE FREE PALESTINE",
                   "I LOVE THE WAY YOU RAP, BOOM, BOOM"],
-   lists:nth(random:uniform(length(StringList)), StringList) ++ " (http://beerenthusiasts.org:8080/ | http://www.beerenthusiasts.org/mmmbot/ | http://www.beerenthusiasts.org/mmmbot/archives/)".
+   lists:nth(random:uniform(length(StringList)), StringList).
 
 % This just helps us write a PRIVMSG back to a client without having to type
 % the newlines and :'s ourselves so much.  It'll be more useful later.
