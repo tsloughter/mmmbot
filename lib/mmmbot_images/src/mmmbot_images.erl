@@ -19,9 +19,7 @@
 
 -define(SERVER, ?MODULE). 
 
--define(BUCKET, "mmmbot_images").
-
--record(state, {}).
+-record(state, {bucket="mmmbot_images"}).
 
 %%%===================================================================
 %%% gen_event callbacks
@@ -43,7 +41,15 @@ init([]) ->
     {ok, AccessKey} = application:get_env(mmmbot_images, access_key),
     {ok, SecretKey} = application:get_env(mmmbot_images, secret_key),    
     erlcloud_s3:configure(AccessKey, SecretKey),
-    {ok, #state{}}.
+
+    State = case application:get_env(mmmbot_images, bucket)  of
+                {ok, Bucket} ->
+                    #state{bucket=Bucket};
+                _ ->
+                    #state{}
+            end, 
+
+    {ok, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -58,8 +64,8 @@ init([]) ->
 %%                          remove_handler
 %% @end
 %%--------------------------------------------------------------------
-handle_event({Line, _User}, State) ->
-    parse(Line),
+handle_event({Line, _User}, State=#state{bucket=Bucket}) ->
+    parse(Bucket, Line),
     {ok, State#state{}}.
 
 %%--------------------------------------------------------------------
@@ -123,33 +129,33 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
--spec parse(string()) -> ok.
-parse("http://" ++ _ = URL) -> 
-    add_url(URL, false);
-parse("https://" ++  _ = URL) -> 
-    add_url(URL, true);
-parse(_Msg) ->
+-spec parse(string(), string()) -> ok.
+parse(Bucket, "http://" ++ _ = URL) -> 
+    add_url(Bucket, URL, false);
+parse(Bucket, "https://" ++  _ = URL) -> 
+    add_url(Bucket, URL, true);
+parse(_Bucket, _Msg) ->
     ok.
 
--spec add_url(string(), boolean()) -> ok.
-add_url(URL, IsSSL) -> 
+-spec add_url(string(), string(), boolean()) -> ok.
+add_url(Bucket, URL, IsSSL) -> 
     io:format("Checking if image ~p:~p~n", [length(URL), URL]),
     ExtStr = string:substr(URL, string:rchr(URL, $.)),
     case is_image_ext(ExtStr) of
         true ->
             io:format("Is image~n"),
-            image_to_s3(URL, ExtStr, IsSSL),
+            image_to_s3(Bucket, URL, ExtStr, IsSSL),
             ok;
         _ ->
             io:format("Not an image~n"),
             ok
     end.
 
--spec image_to_s3(string(), string(), boolean()) -> proplists:proplist().
-image_to_s3(URL, ExtStr, IsSSL) ->
+-spec image_to_s3(string(), string(), string(), boolean()) -> proplists:proplist().
+image_to_s3(Bucket, URL, ExtStr, IsSSL) ->
     Filename = generate_filename(string:sub_word(filename:basename(URL), 1, $.), ExtStr),
     {ok, "200", _Headers, Image} = ibrowse:send_req(URL, [], get, "", [{is_ssl, IsSSL}, {ssl_options, []}]),
-    erlcloud_s3:put_object(?BUCKET, Filename, Image).
+    erlcloud_s3:put_object(Bucket, Filename, Image).
 
 -spec is_image_ext(string()) -> boolean().
 % Compares to standard message extensions

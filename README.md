@@ -19,7 +19,8 @@ Create [code]./config/sys.config[code]
   {mmmbot, []},
 
   {mmmbot_images, [{access_key, <AWS KEY>},
-                   {secret_key, <SECRET KEY>}]}
+                   {secret_key, <SECRET KEY>},
+                   {bucket, <S3 Bucket>}]}
 ].
 
 ```

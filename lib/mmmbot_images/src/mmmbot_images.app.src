@@ -5,5 +5,5 @@
    {vsn, "0.1.0"},
    {modules, []},
    {registered,[]},
-   {applications, [kernel, stdlib, ibrowse, erlcloud]},
+   {applications, [kernel, stdlib, ibrowse, erlcloud, mmmbot]},
    {start_phases, []}]}.
