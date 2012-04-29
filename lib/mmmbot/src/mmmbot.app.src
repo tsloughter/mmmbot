@@ -6,6 +6,6 @@
    {modules, [mmmbot_app,
               mmmbot_sup]},
    {registered,[mmmbot_sup]},
-   {applications, [kernel, stdlib]},
+   {applications, [kernel, stdlib, lager]},
    {mod, {mmmbot_app,[]}},
    {start_phases, []}]}.

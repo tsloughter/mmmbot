@@ -112,7 +112,7 @@ handle_cast({message, Msg}, State=#state{sock=Sock, channel=Channel}) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info({tcp, Sock, Data}, State) ->
-    io:format("[~w] Received: ~s", [Sock, Data]),
+    lager:info("[~w] Received: ~s", [Sock, Data]),
     parse_line(Sock, string:tokens(Data, ": "), Data, State),
     
     {noreply, State}.
@@ -155,7 +155,7 @@ parse_line(Sock, [User, "PRIVMSG", Channel, Nickname | _], _Msg, #state{nickname
 parse_line(_, [User, "PRIVMSG", _Channel | _], Msg, _State) ->
     S1 = string:substr(Msg, string:rstr(Msg, " :")+2),
     S2 = string:substr(S1, 1, length(S1)-2),
-    io:format("Length: ~p, Message: ~p~n", [length(S1), S2]),
+    lager:info("Length: ~p, Message: ~p~n", [length(S1), S2]),
 
     %% Notify all listners of the message
     mmmbot_em:notify({S2, User});

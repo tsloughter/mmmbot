@@ -25,7 +25,17 @@ a # like [code]"#erlang"[code].
 
   {mmmbot_images, [{access_key, <AWS KEY>},
                    {secret_key, <SECRET KEY>},
-                   {bucket, <S3 BUCKET>}]}
+                   {bucket, <S3 BUCKET>}]},
+                   
+  {lager, [
+           {handlers, [
+                        {lager_console_backend, info},
+                        {lager_file_backend, [
+                        {"error.log", error, 10485760, "$D0", 5},
+                        {"console.log", info, 10485760, "$D0", 5}
+                      ]}
+          ]}
+   ]}
 ].
 
 ```

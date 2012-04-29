@@ -139,15 +139,15 @@ parse(_Bucket, _Msg) ->
 
 -spec add_url(string(), string(), boolean()) -> ok.
 add_url(Bucket, URL, IsSSL) -> 
-    io:format("Checking if image ~p:~p~n", [length(URL), URL]),
+    lager:info("Checking if image ~p:~p~n", [length(URL), URL]),
     ExtStr = string:substr(URL, string:rchr(URL, $.)),
     case is_image_ext(ExtStr) of
         true ->
-            io:format("Is image~n"),
+            lager:info("Is image~n"),
             image_to_s3(Bucket, URL, ExtStr, IsSSL),
             ok;
         _ ->
-            io:format("Not an image~n"),
+            lager:info("Not an image~n"),
             ok
     end.
 
@@ -160,7 +160,7 @@ image_to_s3(Bucket, URL, ExtStr, IsSSL) ->
 -spec is_image_ext(string()) -> boolean().
 % Compares to standard message extensions
 is_image_ext(ExtStr) ->
-    io:format("Checking string: ~p~n", [ExtStr]),
+    lager:info("Checking string: ~p~n", [ExtStr]),
     lists:member(ExtStr, [".jpg", ".JPG", ".png", ".PNG", ".gif", ".GIF", 
                           ".jpeg", ".JPEG", ".xmp", ".XMP", ".tiff", ".TIFF"]).
 
