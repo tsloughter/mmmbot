@@ -3,9 +3,7 @@
 {application, mmmbot_images,
   [{description, "MMMBot image handler"},
    {vsn, "0.1.0"},
-   {modules, [mmmbot_images_app,
-              mmmbot_images_sup]},
-   {registered,[mmmbot_images_sup]},
+   {modules, []},
+   {registered,[]},
    {applications, [kernel, stdlib, ibrowse, erlcloud]},
-   {mod, {mmmbot_images_app,[]}},
    {start_phases, []}]}.

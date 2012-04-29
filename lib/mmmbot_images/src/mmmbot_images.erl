@@ -11,7 +11,7 @@
 -behaviour(gen_event).
 
 %% API
--export([start_link/0]).
+-export([start/0]).
 
 %% gen_event callbacks
 -export([init/1, handle_event/2, handle_call/2, 
@@ -27,7 +27,7 @@
 %%% gen_event callbacks
 %%%===================================================================
 
-start_link() ->
+start() ->
     mmmbot_em:add_handler(?SERVER).
 
 %%--------------------------------------------------------------------
@@ -40,8 +40,8 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-    {ok, AccessKey} = application:get_env(access_key),
-    {ok, SecretKey} = application:get_env(secret_key),    
+    {ok, AccessKey} = application:get_env(mmmbot_images, access_key),
+    {ok, SecretKey} = application:get_env(mmmbot_images, secret_key),    
     erlcloud_s3:configure(AccessKey, SecretKey),
     {ok, #state{}}.
 
@@ -155,8 +155,9 @@ image_to_s3(URL, ExtStr, IsSSL) ->
 % Compares to standard message extensions
 is_image_ext(ExtStr) ->
     io:format("Checking string: ~p~n", [ExtStr]),
-    lists:member(ExtStr, [".jpg", ".JPG", ".png", ".PNG", ".gif", ".GIF", ".jpeg", ".JPEG", ".xmp", ".XMP", ".tiff", ".TIFF"]).
+    lists:member(ExtStr, [".jpg", ".JPG", ".png", ".PNG", ".gif", ".GIF", 
+                          ".jpeg", ".JPEG", ".xmp", ".XMP", ".tiff", ".TIFF"]).
 
 -spec generate_filename(string(), string()) -> string().
 generate_filename(Basename, ExtStr) ->
-    lists:flatten([Basename, integer_to_list(calendar:datetime_to_gregorian_seconds(calendar:local_time())), ExtStr]).
+    lists:flatten([Basename, "_", integer_to_list(calendar:datetime_to_gregorian_seconds(calendar:local_time())), ExtStr]).
