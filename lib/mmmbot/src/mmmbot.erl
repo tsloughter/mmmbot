@@ -19,14 +19,10 @@
 
 -define(SERVER, ?MODULE). 
 
--define(server, "irc.oftc.net").
--define(port, 6667).
--define(nickname, "mmmbot").
 -define(help, ".help").
 -define(check, ".check").
--define(channel, "#irlab_mmmbot").
 
--record(state, {sock}).
+-record(state, {sock, channel, nickname}).
 
 %%%===================================================================
 %%% API
@@ -40,7 +36,7 @@
 %% @end
 %%--------------------------------------------------------------------
 start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [?server, ?port], []).
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -57,11 +53,17 @@ start_link() ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([Host, Port]) ->
+init([]) ->    
+    {ok, Host} = application:get_env(mmmbot, host),
+    {ok, Port} = application:get_env(mmmbot, port),
+    {ok, Nickname} = application:get_env(mmmbot, nickname),
+    {ok, Channel} = application:get_env(mmmbot, channel),
+
     {ok, Sock} = gen_tcp:connect(Host, Port, [{packet, line}]),
-    gen_tcp:send(Sock, "NICK " ++ ?nickname ++ "\r\n"),
-    gen_tcp:send(Sock, "USER " ++ ?nickname ++ " blah blah blah blah\r\n"),
-    {ok, #state{sock=Sock}}.
+    gen_tcp:send(Sock, "NICK " ++ Nickname ++ "\r\n"),
+    gen_tcp:send(Sock, "USER " ++ Nickname ++ " blah blah blah blah\r\n"),
+
+    {ok, #state{sock=Sock, channel=Channel, nickname=Nickname}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -106,7 +108,7 @@ handle_cast(_Msg, State) ->
 %%--------------------------------------------------------------------
 handle_info({tcp, Sock, Data}, State) ->
     io:format("[~w] Received: ~s", [Sock, Data]),
-    parse_line(Sock, string:tokens(Data, ": "), Data),
+    parse_line(Sock, string:tokens(Data, ": "), Data, State),
     
     {noreply, State}.
 
@@ -139,13 +141,13 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-% Someone sent a message to "?nickname: "
-parse_line(Sock, [User,"PRIVMSG",Channel,?nickname|_], _Msg) ->
+% Someone sent a message to us
+parse_line(Sock, [User, "PRIVMSG", Channel, Nickname | _], _Msg, #state{nickname=Nickname}) ->
     Nick = lists:nth(1, string:tokens(User, "!")),
     irc_privmsg(Sock, Channel, Nick ++ ": " ++ random_string());
 
 % A message to the channel
-parse_line(_, [User,"PRIVMSG",_Channel|_], Msg) ->
+parse_line(_, [User, "PRIVMSG", _Channel | _], Msg, _State) ->
     S1 = string:substr(Msg, string:rstr(Msg, " :")+2),
     S2 = string:substr(S1, 1, length(S1)-2),
     io:format("Length: ~p, Message: ~p~n", [length(S1), S2]),
@@ -154,16 +156,16 @@ parse_line(_, [User,"PRIVMSG",_Channel|_], Msg) ->
     mmmbot_em:notify({S2, User});
 
 % If the second token is "376", then join our channel.  376 indicates End of MOTD.
-parse_line(Sock, [_,"376"|_], _Msg) ->
-    gen_tcp:send(Sock, "JOIN :" ++ ?channel ++ "\r\n");
+parse_line(Sock, [_, "376" | _], _Msg, #state{channel=Channel}) ->
+    gen_tcp:send(Sock, "JOIN :" ++ Channel ++ "\r\n");
 
 % The server will periodically send PINGs and expect you to PONG back to make sure
 % you haven't lost the connection.
-parse_line(Sock, ["PING"|Rest], _Msg) ->
+parse_line(Sock, ["PING"|Rest], _Msg, _State) ->
     gen_tcp:send(Sock, "PONG " ++ Rest ++ "\r\n");
 
 % Catch all
-parse_line(_, _, _) ->
+parse_line(_, _, _, _) ->
     ok.
 
 % Random string

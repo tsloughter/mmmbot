@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE). 
 
--record(state, {bucket="mmmbot_images"}).
+-record(state, {bucket="mmmbotimages"}).
 
 %%%===================================================================
 %%% gen_event callbacks
