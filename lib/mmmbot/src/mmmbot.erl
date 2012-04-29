@@ -61,7 +61,6 @@ init([Host, Port]) ->
     {ok, Sock} = gen_tcp:connect(Host, Port, [{packet, line}]),
     gen_tcp:send(Sock, "NICK " ++ ?nickname ++ "\r\n"),
     gen_tcp:send(Sock, "USER " ++ ?nickname ++ " blah blah blah blah\r\n"),
-    file:make_dir("pics"),
     {ok, #state{sock=Sock}}.
 
 %%--------------------------------------------------------------------
