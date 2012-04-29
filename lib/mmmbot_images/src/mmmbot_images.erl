@@ -66,7 +66,7 @@ init([]) ->
 %%--------------------------------------------------------------------
 handle_event({Line, _User}, State=#state{bucket=Bucket}) ->
     parse(Bucket, Line),
-    {ok, State#state{}}.
+    {ok, State}.
 
 %%--------------------------------------------------------------------
 %% @private

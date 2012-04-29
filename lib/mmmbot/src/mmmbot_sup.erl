@@ -42,10 +42,10 @@ init([]) ->
     Shutdown = 2000,
     Type = worker,
 
-    Children = [{mmmbot, {mmmbot, start_link, []},
-                 Restart, Shutdown, Type, [mmmbot]},
-                {mmmbot_em, {mmmbot_em, start_link, []},
-                 Restart, Shutdown, Type, [mmmbot_em]}],
+    Children = [{mmmbot_em, {mmmbot_em, start_link, []},
+                 Restart, Shutdown, Type, [mmmbot_em]},
+                {mmmbot, {mmmbot, start_link, []},
+                 Restart, Shutdown, Type, [mmmbot]}],
 
     {ok, {SupFlags, Children}}.
 
