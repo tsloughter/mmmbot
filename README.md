@@ -7,7 +7,7 @@ Application |          Version
 proper      |              1.0 
 eunit       |            2.2.2 
 erlcloud    |            0.4.0
-ibrowe      |            3.0.3
+ibrowser    |            3.0.3
 
 
 ### Setup
