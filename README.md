@@ -13,9 +13,9 @@ lager       |          @master
 
 ### Setup
 
-Create [code]./config/sys.config[code]. The port should be an integer,
+Create `./config/sys.config`. The port should be an integer,
 usually 6667, the nickname can be anything and channel must start with
-a # like [code]"#erlang"[code].
+a # like `"#erlang"`.
 
 ```erlang
 [ 
