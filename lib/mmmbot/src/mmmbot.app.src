@@ -1,0 +1,11 @@
+%% This is the application resource file (.app file) for the,
+%% application.
+{application, mmmbot,
+  [{description, "IRC Bot"},
+   {vsn, "0.1.0"},
+   {modules, [mmmbot_app,
+              mmmbot_sup]},
+   {registered,[mmmbot_sup]},
+   {applications, [kernel, stdlib]},
+   {mod, {mmmbot_app,[]}},
+   {start_phases, []}]}.
