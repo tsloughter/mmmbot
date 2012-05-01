@@ -68,7 +68,10 @@ init([]) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_event({Line, _User}, State=#state{bucket=Bucket, mp=MP, mp_ssl=MPSSL}) ->
-    parse(Bucket, Line, MP, MPSSL),
+    AWSConfig = erlcloud_aws:default_config(), 
+    proc_lib:spawn_link(fun() -> 
+                                parse(Bucket, Line, MP, MPSSL, AWSConfig)
+                        end),
     {ok, State}.
 
 %%--------------------------------------------------------------------
@@ -132,65 +135,30 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
--spec parse(string(), string(), re:mp(), re:mp()) -> ok.
-parse(Bucket, Msg, MP, MPSSL) -> 
+-spec parse(string(), string(), re:mp(), re:mp(), tuple()) -> ok.
+parse(Bucket, Msg, MP, MPSSL, AWSConfig) -> 
     case re:run(Msg, MP, [{capture, first, list}]) of
         nomatch ->
             case re:run(Msg, MPSSL, [{capture, first, list}]) of
                 nomatch ->
                     ok;
                 {match, [URL]} ->
-                    add_image(Bucket, URL, true)
+                    image_to_s3(Bucket, URL, true, AWSConfig)
             end;
         {match, [URL]} ->
-            add_image(Bucket, URL, false)
+            image_to_s3(Bucket, URL, false, AWSConfig)
     end.
        
--spec add_image(string(), string(), boolean()) -> ok.
-add_image(Bucket, URL, IsSSL) -> 
-    lager:info("Got image ~p:~p~n", [length(URL), URL]),
-    image_to_s3(Bucket, URL, IsSSL),
-    ok.
-
--spec image_to_s3(string(), string(), boolean()) -> proplists:proplist().
-image_to_s3(Bucket, URL, IsSSL) ->
+-spec image_to_s3(string(), string(), boolean(), tuple()) -> proplists:proplist().
+image_to_s3(Bucket, URL, IsSSL, AWSConfig) ->
     ExtStr = string:substr(URL, string:rchr(URL, $.)),
     Filename = generate_filename(string:sub_word(filename:basename(URL), 1, $.), ExtStr),
-    AWSConfig = erlcloud_aws:default_config(),
 
-    Pid = proc_lib:spawn_link(fun() -> 
-                                      upload_to_s3(Bucket, Filename, AWSConfig) 
-                              end),
+    {ok, "200", _, Image} = ibrowse:send_req(URL, [], get, "", 
+                                             [{is_ssl, IsSSL}, {ssl_options, []}]),
 
-    case ibrowse:send_req(URL, [], get, "", 
-                          [{is_ssl, IsSSL}, {ssl_options, []}, 
-                           {stream_to, Pid}]) of
-        {ibrowse_req_id, ReqId} ->
-            Pid ! {req_id, ReqId};
-        {error, conn_failed} ->
-            Pid ! {error, conn_failed}
-    end.
-    
-upload_to_s3(Bucket, Filename, AWSConfig) ->
-    receive
-        {req_id, ReqId} ->
-            upload_to_s3(Bucket, Filename, ReqId, [], AWSConfig);
-        {error, conn_failed} ->
-            lager:info("Image download failed ~p~n", [Filename])
-    end.
-
-upload_to_s3(Bucket, Filename, ReqId, Image, AWSConfig) ->
-    receive 
-        {ibrowse_async_headers, ReqId, "200", _} ->
-            upload_to_s3(Bucket, Filename, ReqId, Image, AWSConfig);
-        {ibrowse_async_headers, ReqId, _, _} ->
-            lager:info("Image download failed ~p~n", [Filename]);
-        {ibrowse_async_response, ReqId, More} ->
-            upload_to_s3(Bucket, Filename, ReqId, [Image | More], AWSConfig);
-        {ibrowse_async_response_end, ReqId} ->
-            lager:info("Uploading image ~p~n", [Filename]),
-            erlcloud_s3:put_object(Bucket, Filename, Image, AWSConfig)
-    end.
+    lager:info("Uploading image ~p~n", [Filename]),
+    erlcloud_s3:put_object(Bucket, Filename, Image, AWSConfig).
 
 -spec generate_filename(string(), string()) -> string().
 generate_filename(Basename, ExtStr) ->
