@@ -156,8 +156,41 @@ add_image(Bucket, URL, IsSSL) ->
 image_to_s3(Bucket, URL, IsSSL) ->
     ExtStr = string:substr(URL, string:rchr(URL, $.)),
     Filename = generate_filename(string:sub_word(filename:basename(URL), 1, $.), ExtStr),
-    {ok, "200", _Headers, Image} = ibrowse:send_req(URL, [], get, "", [{is_ssl, IsSSL}, {ssl_options, []}]),
-    erlcloud_s3:put_object(Bucket, Filename, Image).
+    AWSConfig = erlcloud_aws:default_config(),
+
+    Pid = proc_lib:spawn_link(fun() -> 
+                                      upload_to_s3(Bucket, Filename, AWSConfig) 
+                              end),
+
+    case ibrowse:send_req(URL, [], get, "", 
+                          [{is_ssl, IsSSL}, {ssl_options, []}, 
+                           {stream_to, Pid}]) of
+        {ibrowse_req_id, ReqId} ->
+            Pid ! {req_id, ReqId};
+        {error, conn_failed} ->
+            Pid ! {error, conn_failed}
+    end.
+    
+upload_to_s3(Bucket, Filename, AWSConfig) ->
+    receive
+        {req_id, ReqId} ->
+            upload_to_s3(Bucket, Filename, ReqId, [], AWSConfig);
+        {error, conn_failed} ->
+            lager:info("Image download failed ~p~n", [Filename])
+    end.
+
+upload_to_s3(Bucket, Filename, ReqId, Image, AWSConfig) ->
+    receive 
+        {ibrowse_async_headers, ReqId, "200", _} ->
+            upload_to_s3(Bucket, Filename, ReqId, Image, AWSConfig);
+        {ibrowse_async_headers, ReqId, _, _} ->
+            lager:info("Image download failed ~p~n", [Filename]);
+        {ibrowse_async_response, ReqId, More} ->
+            upload_to_s3(Bucket, Filename, ReqId, [Image | More], AWSConfig);
+        {ibrowse_async_response_end, ReqId} ->
+            lager:info("Uploading image ~p~n", [Filename]),
+            erlcloud_s3:put_object(Bucket, Filename, Image, AWSConfig)
+    end.
 
 -spec generate_filename(string(), string()) -> string().
 generate_filename(Basename, ExtStr) ->
