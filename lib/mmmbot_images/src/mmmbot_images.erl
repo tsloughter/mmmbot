@@ -130,13 +130,19 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 
 -spec parse(string(), string()) -> ok.
-parse(Bucket, "http://" ++ _ = URL) -> 
-    add_url(Bucket, URL, false);
-parse(Bucket, "https://" ++  _ = URL) -> 
-    add_url(Bucket, URL, true);
-parse(_Bucket, _Msg) ->
-    ok.
-
+parse(Bucket, URL) -> 
+    case string:substr("http://", URL) of
+        0 ->
+            case string:substr("https://", URL) of
+                0 ->
+                    ok;
+                _ ->
+                    add_url(Bucket, URL, true)
+                end;
+        _ ->
+            add_url(Bucket, URL, false)
+    end.
+       
 -spec add_url(string(), string(), boolean()) -> ok.
 add_url(Bucket, URL, IsSSL) -> 
     lager:info("Checking if image ~p:~p~n", [length(URL), URL]),
