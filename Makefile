@@ -21,10 +21,10 @@ $(PROJ_PLT):
 		--apps erts kernel stdlib crypto public_key -r deps --fullpath
 
 dialyzer: $(PROJ_PLT)
-	dialyzer --plt $(PROJ_PLT) -pa deps/* --src src
+	dialyzer --plt $(PROJ_PLT) -pa deps/* --src apps/*/src
 
 typer: $(PROJ_PLT)
-	typer --plt $(PROJ_PLT) -r ./src
+	typer --plt $(PROJ_PLT) -r ./apps*/src
 
 clean:
 	$(REBAR) clean

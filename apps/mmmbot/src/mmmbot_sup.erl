@@ -29,8 +29,6 @@ start_link() ->
 
 
 %% @private
--spec init(list()) -> {ok, {SupFlags::any(), [ChildSpec::any()]}} |
-                       ignore | {error, Reason::any()}.
 init([]) ->
     RestartStrategy = one_for_one,
     MaxRestarts = 1000,

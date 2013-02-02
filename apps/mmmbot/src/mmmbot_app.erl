@@ -16,9 +16,6 @@
 %%%===================================================================
 
 %% @private
--spec start(normal | {takeover, node()} | {failover, node()},
-            any()) -> {ok, pid()} | {ok, pid(), State::any()} |
-                      {error, Reason::any()}.
 start(_StartType, _StartArgs) ->
     case mmmbot_sup:start_link() of
         {ok, Pid} ->
@@ -28,7 +25,6 @@ start(_StartType, _StartArgs) ->
     end.
 
 %% @private
--spec stop(State::any()) -> ok.
 stop(_State) ->
     ok.
 
