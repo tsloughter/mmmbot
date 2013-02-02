@@ -28,10 +28,21 @@ Modify `./config/sys.config`.
 ### Build and Run
 
 ```shell
-$ make rel
-$ _rel/bin/mmmbot
+λ make rel
+λ _rel/bin/mmmbot
 .......
 
 1> mmmbot_images:start().
 ok
+```
+
+### Run on Heroku
+
+Update your `./config/sys.config` file as usual and commit that
+change.
+
+```
+λ heroku create --buildpack https://github.com/tsloughter/heroku-buildpack-erlang.git
+λ git push heroku master
+λ heroku scale bot=1
 ```
