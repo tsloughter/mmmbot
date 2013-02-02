@@ -1,5 +1,9 @@
-log
-console.log
-error.log
-sys.config
-_build
+.eunit
+deps
+priv
+*.o
+*.beam
+*.plt
+.erlang.cookie
+ebin
+.depsolver_plt
