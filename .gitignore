@@ -7,3 +7,5 @@ priv
 .erlang.cookie
 ebin
 .depsolver_plt
+_rel
+log
