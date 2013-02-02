@@ -42,6 +42,8 @@ Update your `./config/sys.config` file as usual and commit that
 change.
 
 ```
+λ git add ./config/sys.config
+λ git commit -m "update sys.config"
 λ heroku create --buildpack https://github.com/tsloughter/heroku-buildpack-erlang.git
 λ git push heroku master
 λ heroku scale bot=1
