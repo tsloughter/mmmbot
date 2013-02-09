@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE). 
 
--record(state, {funs=[]}).
+-record(state, {}).
 
 %%%===================================================================
 %%% gen_event callbacks
@@ -33,21 +33,17 @@ init([]) ->
     {ok, #state{}}.
 
 %%--------------------------------------------------------------------
-handle_event({Line="fun() ->" ++ _, _User}, State=#state{funs=Funs}) ->
+handle_event({Line="fun() ->" ++ _, User}, State) ->
     {ok, Tokens, _} = erl_scan:string(Line),
     {ok, [Form]} = erl_parse:parse_exprs(Tokens),
-    {ok, State#state{funs=[Form | Funs]}};
-handle_event({Line, User}, State=#state{funs=Funs}) ->
-    lists:foreach(fun(Form) ->
-                          Bindings =  erl_eval:add_binding('User', User, 
-                                                           erl_eval:add_binding('Msg', Line, erl_eval:new_bindings())),
-                          {value, Fun, _} = erl_eval:expr(Form, Bindings),   
-                          Fun()
-                  end, Funs),
-
+    Bindings =  erl_eval:add_binding('User', User, 
+                                    erl_eval:add_binding('Msg', Line, erl_eval:new_bindings())),
+    {value, Fun, _} = erl_eval:expr(Form, Bindings),   
+    Msg = io_lib:format("~p", [Fun()]),
+    mmmbot:send_message(Msg),
+    {ok, State};
+handle_event(_, State) ->
     {ok, State}.
-
-
 
 %%--------------------------------------------------------------------
 handle_call(_Request, State) ->
