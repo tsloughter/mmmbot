@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE). 
 
--record(state, {bucket="mmmbotimages", mp, mp_ssl}).
+-record(state, {bucket="mmmbotimages", mp}).
 
 %%%===================================================================
 %%% gen_event callbacks
@@ -34,12 +34,11 @@ init([]) ->
     {ok, SecretKey} = application:get_env(mmmbot_images, secret_key),    
     erlcloud_s3:configure(AccessKey, SecretKey),
 
-    {ok, MP} = re:compile("http://(\\S*)(\\.jpg|\\.png|\\.gif|\\.jpeg|\\.xmp|\\.tiff)", [caseless]),
-    {ok, MPSSL} = re:compile("https://(\\S*)(\\.jpg|\\.png|\\.gif|\\.jpeg|\\.xmp|\\.tiff)", [caseless]),
+    {ok, MP} = re:compile("(http|https)://(\\S*)(\\.jpg|\\.png|\\.gif|\\.jpeg|\\.xmp|\\.tiff)", [caseless]),
 
     State = case application:get_env(mmmbot_images, bucket)  of
                 {ok, Bucket} ->
-                    #state{bucket=Bucket, mp=MP, mp_ssl=MPSSL};
+                    #state{bucket=Bucket, mp=MP};
                 _ ->
                     #state{}
             end, 
@@ -47,10 +46,10 @@ init([]) ->
     {ok, State}.
 
 %%--------------------------------------------------------------------
-handle_event({Line, _User}, State=#state{bucket=Bucket, mp=MP, mp_ssl=MPSSL}) ->
+handle_event({Line, _User}, State=#state{bucket=Bucket, mp=MP}) ->
     AWSConfig = erlcloud_aws:default_config(), 
     proc_lib:spawn_link(fun() -> 
-                                parse(Bucket, Line, MP, MPSSL, AWSConfig)
+                                parse(Bucket, Line, MP, AWSConfig)
                         end),
     {ok, State}.
 
@@ -75,16 +74,11 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
--spec parse(string(), string(), re:mp(), re:mp(), tuple()) -> ok.
-parse(Bucket, Msg, MP, MPSSL, AWSConfig) -> 
+-spec parse(string(), string(), re:mp(), tuple()) -> ok.
+parse(Bucket, Msg, MP, AWSConfig) -> 
     case re:run(Msg, MP, [{capture, first, list}]) of
         nomatch ->
-            case re:run(Msg, MPSSL, [{capture, first, list}]) of
-                nomatch ->
-                    ok;
-                {match, [URL]} ->
-                    image_to_s3(Bucket, URL, true, AWSConfig)
-            end;
+            ok;
         {match, [URL]} ->
             image_to_s3(Bucket, URL, false, AWSConfig)
     end.
