@@ -19,7 +19,7 @@
 
 -define(SERVER, ?MODULE). 
 
--record(state, {bucket="mmmbotimages", mp}).
+-record(state, {bucket, mp}).
 
 %%%===================================================================
 %%% gen_event callbacks
@@ -31,19 +31,13 @@ start() ->
 %%--------------------------------------------------------------------
 init([]) ->
     {ok, AccessKey} = application:get_env(mmmbot_images, access_key),
-    {ok, SecretKey} = application:get_env(mmmbot_images, secret_key),    
+    {ok, SecretKey} = application:get_env(mmmbot_images, secret_key),
+    {ok, Bucket} = application:get_env(mmmbot_images, bucket),
     erlcloud_s3:configure(AccessKey, SecretKey),
 
     {ok, MP} = re:compile("(http|https)://(\\S*)(\\.jpg|\\.png|\\.gif|\\.jpeg|\\.xmp|\\.tiff)", [caseless]),
 
-    State = case application:get_env(mmmbot_images, bucket)  of
-                {ok, Bucket} ->
-                    #state{bucket=Bucket, mp=MP};
-                _ ->
-                    #state{}
-            end, 
-
-    {ok, State}.
+    {ok, #state{bucket=Bucket, mp=MP}}.
 
 %%--------------------------------------------------------------------
 handle_event({Line, _User}, State=#state{bucket=Bucket, mp=MP}) ->
