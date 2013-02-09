@@ -1,1 +1,1 @@
-bot: ./_rel/bin/mmmbot +K true -noshell
+bot: ./_rel/bin/mmmbot -noshell
