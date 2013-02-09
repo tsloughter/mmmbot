@@ -114,7 +114,6 @@ random_string() ->
     StringList = ["THAT'S NOT MY NAME",
                   "THEY CALL ME QUIET, BUT I'M A RIOT",
                   "MAJOR LAZER",
-                  "DON'T BE A LITTLE BITCH WITH YOUR CHIT CHAT",
                   "STOP TALKIN' 'BOUT BLAH BLAH BLAH",
                   "FREE FREE PALESTINE",
                   "I LOVE THE WAY YOU RAP, BOOM, BOOM"],
