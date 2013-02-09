@@ -19,6 +19,7 @@
 start(_StartType, _StartArgs) ->
     case mmmbot_sup:start_link() of
         {ok, Pid} ->
+            mmmbot_eval:start(),
             {ok, Pid};
         Error ->
             Error
